@@ -221,7 +221,7 @@ function Home() {
               <div className="w-full flex flex-col sm:flex-row items-center gap-2">
                 <input
                   type="text"
-                  className="w-full sm:w-[70%] px-4 py-2 rounded-md text-black"
+                  className="w-full sm:w-[70%] px-4 py-2 rounded-md text-black bg-white placeholder-gray-600"
                   placeholder="Type your command..."
                   value={typedInput}
                   onChange={(e) => setTypedInput(e.target.value)}
