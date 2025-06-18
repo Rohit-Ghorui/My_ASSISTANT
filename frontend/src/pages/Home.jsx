@@ -3,8 +3,8 @@ import { userDataContext } from '../context/UserContext'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import aiImg from "../assets/ai.gif"
-import { CgMenuRight } from "react-icons/cg";
-import { RxCross1 } from "react-icons/rx";
+import { CgMenuRight } from "react-icons/cg"
+import { RxCross1 } from "react-icons/rx"
 import userImg from "../assets/user.gif"
 
 function Home() {
@@ -35,10 +35,10 @@ function Home() {
   const startRecognition = () => {
     if (!isSpeakingRef.current && !isRecognizingRef.current) {
       try {
-        recognitionRef.current?.start();
+        recognitionRef.current?.start()
       } catch (error) {
         if (error.name !== "InvalidStateError") {
-          console.error("Start error:", error);
+          console.error("Start error:", error)
         }
       }
     }
@@ -49,9 +49,7 @@ function Home() {
     utterance.lang = 'hi-IN'
     const voices = window.speechSynthesis.getVoices()
     const hindiVoice = voices.find(v => v.lang === 'hi-IN')
-    if (hindiVoice) {
-      utterance.voice = hindiVoice
-    }
+    if (hindiVoice) utterance.voice = hindiVoice
 
     isSpeakingRef.current = true
     utterance.onend = () => {
@@ -61,6 +59,7 @@ function Home() {
         startRecognition()
       }, 800)
     }
+
     synth.cancel()
     synth.speak(utterance)
   }
@@ -174,23 +173,29 @@ function Home() {
   return (
     <div className='w-full h-[100vh] bg-gradient-to-t from-black to-[#02023d] flex justify-center items-center flex-col gap-[15px] overflow-hidden'>
 
-      {/* Mobile Menu Icon */}
+      {/* Mobile Hamburger Icon */}
       <CgMenuRight
-        className='lg:hidden text-white absolute top-[20px] right-[20px] w-[25px] h-[25px] z-50'
+        className='lg:hidden text-white absolute top-[20px] right-[20px] w-[30px] h-[30px] z-50 cursor-pointer'
         onClick={() => setHam(true)}
       />
 
       {/* Sliding Mobile Menu */}
-      <div className={`fixed inset-0 bg-[#00000053] backdrop-blur-lg z-40 transform transition-transform duration-300 ease-in-out ${ham ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className="relative w-full h-full p-[20px] flex flex-col gap-[20px] items-start">
-          <RxCross1
-            className='text-white absolute top-[20px] right-[20px] w-[25px] h-[25px]'
-            onClick={() => setHam(false)}
-          />
-          <button className='w-full text-center h-[50px] text-black font-semibold bg-white rounded-full text-[16px]' onClick={handleLogOut}>Log Out</button>
-          <button className='w-full text-center h-[50px] text-black font-semibold bg-white rounded-full text-[16px]' onClick={() => navigate("/customize")}>Customize Assistant</button>
+      {ham && (
+        <div className="fixed inset-0 z-40">
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => setHam(false)}></div>
+
+          {/* Sidebar Menu */}
+          <div className="absolute right-0 top-0 h-full w-[80%] max-w-[300px] bg-[#121212] p-5 flex flex-col items-start z-50">
+            <RxCross1
+              className="text-white text-[25px] absolute top-4 right-4 cursor-pointer"
+              onClick={() => setHam(false)}
+            />
+            <button className="mt-20 w-full h-[50px] bg-white text-black font-semibold rounded-full text-[16px]" onClick={handleLogOut}>Log Out</button>
+            <button className="mt-4 w-full h-[50px] bg-white text-black font-semibold rounded-full text-[16px]" onClick={() => navigate("/customize")}>Customize Assistant</button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Desktop Buttons */}
       <button className='hidden lg:block absolute top-[20px] right-[20px] min-w-[150px] h-[50px] text-black font-semibold bg-white rounded-full text-[16px]' onClick={handleLogOut}>Log Out</button>
@@ -209,11 +214,20 @@ function Home() {
           className='w-full h-[400px] bg-[#ffffff1a] rounded-2xl p-4 overflow-y-auto mb-4 flex flex-col gap-4 scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent'
         >
           {conversation.map((msg, index) => (
-            <div key={index} className={`flex items-start gap-2 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div
+              key={index}
+              className={`flex items-start gap-2 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
               {msg.type === 'ai' && (
                 <img src={userData?.assistantImage} alt="AI" className="w-8 h-8 rounded-full object-cover mt-1" />
               )}
-              <div className={`px-4 py-2 text-sm sm:text-[15px] rounded-2xl max-w-[75%] sm:max-w-[65%] break-words ${msg.type === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-black rounded-bl-none'}`}>
+              <div
+                className={`px-4 py-2 text-sm sm:text-[15px] rounded-2xl max-w-[75%] sm:max-w-[65%] break-words ${
+                  msg.type === 'user'
+                    ? 'bg-blue-600 text-white rounded-br-none'
+                    : 'bg-white text-black rounded-bl-none'
+                }`}
+              >
                 {msg.text}
               </div>
               {msg.type === 'user' && (
@@ -223,7 +237,7 @@ function Home() {
           ))}
         </div>
 
-        {/* Current Speaking Text */}
+        {/* Speaking/Listening Display */}
         <div className='flex items-center gap-4 flex-wrap text-center justify-center'>
           {!aiText && <img src={userImg} alt="" className='w-[80px]' />}
           {aiText && <img src={aiImg} alt="" className='w-[80px]' />}
