@@ -174,12 +174,22 @@ function Home() {
   return (
     <div className='w-full h-[100vh] bg-gradient-to-t from-black to-[#02023d] flex justify-center items-center flex-col gap-[15px] overflow-hidden'>
 
-      {/* Mobile Menu */}
-      <CgMenuRight className='lg:hidden text-white absolute top-[20px] right-[20px] w-[25px] h-[25px]' onClick={() => setHam(true)} />
-      <div className={`absolute lg:hidden top-0 w-full h-full bg-[#00000053] backdrop-blur-lg p-[20px] flex flex-col gap-[20px] items-start ${ham ? "translate-x-0" : "translate-x-full"} transition-transform`}>
-        <RxCross1 className='text-white absolute top-[20px] right-[20px] w-[25px] h-[25px]' onClick={() => setHam(false)} />
-        <button className='w-full text-center h-[50px] text-black font-semibold bg-white rounded-full text-[16px]' onClick={handleLogOut}>Log Out</button>
-        <button className='w-full text-center h-[50px] text-black font-semibold bg-white rounded-full text-[16px]' onClick={() => navigate("/customize")}>Customize Assistant</button>
+      {/* Mobile Menu Icon */}
+      <CgMenuRight
+        className='lg:hidden text-white absolute top-[20px] right-[20px] w-[25px] h-[25px] z-50'
+        onClick={() => setHam(true)}
+      />
+
+      {/* Sliding Mobile Menu */}
+      <div className={`fixed inset-0 bg-[#00000053] backdrop-blur-lg z-40 transform transition-transform duration-300 ease-in-out ${ham ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="relative w-full h-full p-[20px] flex flex-col gap-[20px] items-start">
+          <RxCross1
+            className='text-white absolute top-[20px] right-[20px] w-[25px] h-[25px]'
+            onClick={() => setHam(false)}
+          />
+          <button className='w-full text-center h-[50px] text-black font-semibold bg-white rounded-full text-[16px]' onClick={handleLogOut}>Log Out</button>
+          <button className='w-full text-center h-[50px] text-black font-semibold bg-white rounded-full text-[16px]' onClick={() => navigate("/customize")}>Customize Assistant</button>
+        </div>
       </div>
 
       {/* Desktop Buttons */}
@@ -188,7 +198,6 @@ function Home() {
 
       {/* Main Content */}
       <div className='flex flex-col items-center w-full max-w-4xl px-4'>
-        {/* Assistant Avatar */}
         <div className='w-[200px] h-[200px] sm:w-[300px] sm:h-[300px] flex justify-center items-center overflow-hidden rounded-4xl shadow-lg mb-4'>
           <img src={userData?.assistantImage} alt="" className='h-full object-cover' />
         </div>
@@ -200,38 +209,21 @@ function Home() {
           className='w-full h-[400px] bg-[#ffffff1a] rounded-2xl p-4 overflow-y-auto mb-4 flex flex-col gap-4 scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent'
         >
           {conversation.map((msg, index) => (
-            <div
-              key={index}
-              className={`flex items-start gap-2 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
+            <div key={index} className={`flex items-start gap-2 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.type === 'ai' && (
-                <img
-                  src={userData?.assistantImage}
-                  alt="AI"
-                  className="w-8 h-8 rounded-full object-cover mt-1"
-                />
+                <img src={userData?.assistantImage} alt="AI" className="w-8 h-8 rounded-full object-cover mt-1" />
               )}
-              <div
-                className={`px-4 py-2 text-sm sm:text-[15px] rounded-2xl max-w-[75%] sm:max-w-[65%] break-words ${
-                  msg.type === 'user'
-                    ? 'bg-blue-600 text-white rounded-br-none'
-                    : 'bg-white text-black rounded-bl-none'
-                }`}
-              >
+              <div className={`px-4 py-2 text-sm sm:text-[15px] rounded-2xl max-w-[75%] sm:max-w-[65%] break-words ${msg.type === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-black rounded-bl-none'}`}>
                 {msg.text}
               </div>
               {msg.type === 'user' && (
-                <img
-                  src={userImg}
-                  alt="User"
-                  className="w-8 h-8 rounded-full object-cover mt-1"
-                />
+                <img src={userImg} alt="User" className="w-8 h-8 rounded-full object-cover mt-1" />
               )}
             </div>
           ))}
         </div>
 
-        {/* Current Message */}
+        {/* Current Speaking Text */}
         <div className='flex items-center gap-4 flex-wrap text-center justify-center'>
           {!aiText && <img src={userImg} alt="" className='w-[80px]' />}
           {aiText && <img src={aiImg} alt="" className='w-[80px]' />}
