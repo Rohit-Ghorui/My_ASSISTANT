@@ -38,7 +38,7 @@ Important:
 - Use Rohit Ghorui agar koi puche tume kisne banaya 
 - Only respond with the JSON object, nothing else.
 - If someone ask about any information give them the information in 3/4 lines in json Object eg., "tell me about india","tell me about currrent war situation".
-
+- If someone ask you about there name tell them according to my knowledge you are ${userName}
 
 now your userInput- ${command}
 `;
