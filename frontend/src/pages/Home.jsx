@@ -3,8 +3,6 @@ import { userDataContext } from '../context/UserContext'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import aiImg from "../assets/ai.gif"
-import { CgMenuRight } from "react-icons/cg"
-import { RxCross1 } from "react-icons/rx"
 import userImg from "../assets/user.gif"
 
 function Home() {
@@ -16,7 +14,6 @@ function Home() {
   const [conversation, setConversation] = useState([])
   const isSpeakingRef = useRef(false)
   const recognitionRef = useRef(null)
-  const [ham, setHam] = useState(false)
   const isRecognizingRef = useRef(false)
   const synth = window.speechSynthesis
   const chatContainerRef = useRef(null)
@@ -173,38 +170,20 @@ function Home() {
   return (
     <div className='w-full h-[100vh] bg-gradient-to-t from-black to-[#02023d] flex justify-center items-center flex-col gap-[15px] overflow-hidden'>
 
-      {/* Mobile Hamburger Icon */}
-      <CgMenuRight
-        className='lg:hidden text-white absolute top-[20px] right-[20px] w-[30px] h-[30px] z-50 cursor-pointer'
-        onClick={() => setHam(true)}
-      />
-
-      {/* Sliding Mobile Menu */}
-      {ham && (
-        <div className="fixed inset-0 z-40">
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => setHam(false)}></div>
-
-          {/* Sidebar Menu */}
-          <div className="absolute right-0 top-0 h-full w-[80%] max-w-[300px] bg-[#121212] p-5 flex flex-col items-start z-50">
-            <RxCross1
-              className="text-white text-[25px] absolute top-4 right-4 cursor-pointer"
-              onClick={() => setHam(false)}
-            />
-            <button className="mt-20 w-full h-[50px] bg-white text-black font-semibold rounded-full text-[16px]" onClick={handleLogOut}>Log Out</button>
-            <button className="mt-4 w-full h-[50px] bg-white text-black font-semibold rounded-full text-[16px]" onClick={() => navigate("/customize")}>Customize Assistant</button>
-          </div>
-        </div>
-      )}
-
-      {/* Desktop Buttons */}
-      <button className='hidden lg:block absolute top-[20px] right-[20px] min-w-[150px] h-[50px] text-black font-semibold bg-white rounded-full text-[16px]' onClick={handleLogOut}>Log Out</button>
-      <button className='hidden lg:block absolute top-[80px] right-[20px] min-w-[150px] h-[50px] text-black font-semibold bg-white rounded-full text-[16px]' onClick={() => navigate("/customize")}>Customize Assistant</button>
+      {/* Always Visible Buttons */}
+      <div className='absolute top-[20px] right-[20px] flex flex-col gap-4 sm:flex-row sm:gap-3'>
+        <button className='min-w-[120px] h-[45px] px-4 bg-white text-black font-semibold rounded-full text-[14px]' onClick={handleLogOut}>
+          Log Out
+        </button>
+        <button className='min-w-[150px] h-[45px] px-4 bg-white text-black font-semibold rounded-full text-[14px]' onClick={() => navigate("/customize")}>
+          Customize Assistant
+        </button>
+      </div>
 
       {/* Main Content */}
       <div className='flex flex-col items-center w-full max-w-4xl px-4'>
         <div className='w-[200px] h-[200px] sm:w-[300px] sm:h-[300px] flex justify-center items-center overflow-hidden rounded-4xl shadow-lg mb-4'>
-          <img src={userData?.assistantImage} alt="" className='h-full object-cover' />
+          <img src={userData?.assistantImage} alt="Assistant" className='h-full object-cover' />
         </div>
         <h1 className='text-white text-[18px] font-semibold mb-4'>I'm {userData?.assistantName}</h1>
 
