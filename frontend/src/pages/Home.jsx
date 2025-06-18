@@ -173,38 +173,46 @@ function Home() {
 
   return (
     <div className='w-full h-[100vh] bg-gradient-to-t from-black to-[#02023d] flex justify-center items-center flex-col gap-[15px] overflow-hidden'>
+
       {/* Mobile Menu */}
       <CgMenuRight className='lg:hidden text-white absolute top-[20px] right-[20px] w-[25px] h-[25px]' onClick={() => setHam(true)} />
       <div className={`absolute lg:hidden top-0 w-full h-full bg-[#00000053] backdrop-blur-lg p-[20px] flex flex-col gap-[20px] items-start ${ham ? "translate-x-0" : "translate-x-full"} transition-transform`}>
         <RxCross1 className='text-white absolute top-[20px] right-[20px] w-[25px] h-[25px]' onClick={() => setHam(false)} />
-        <button className='min-w-[150px] h-[60px] text-black font-semibold bg-white rounded-full cursor-pointer text-[19px]' onClick={handleLogOut}>Log Out</button>
-        <button className='min-w-[150px] h-[60px] text-black font-semibold bg-white rounded-full cursor-pointer text-[19px] px-[20px] py-[10px]' onClick={() => navigate("/customize")}>Customize your Assistant</button>
+        <button className='w-full text-center h-[50px] text-black font-semibold bg-white rounded-full text-[16px]' onClick={handleLogOut}>Log Out</button>
+        <button className='w-full text-center h-[50px] text-black font-semibold bg-white rounded-full text-[16px]' onClick={() => navigate("/customize")}>Customize Assistant</button>
       </div>
 
       {/* Desktop Buttons */}
-      <button className='min-w-[150px] h-[60px] mt-[30px] text-black font-semibold absolute hidden lg:block top-[20px] right-[20px] bg-white rounded-full cursor-pointer text-[19px]' onClick={handleLogOut}>Log Out</button>
-      <button className='min-w-[150px] h-[60px] mt-[30px] text-black font-semibold bg-white absolute top-[100px] right-[20px] rounded-full cursor-pointer text-[19px] px-[20px] py-[10px] hidden lg:block' onClick={() => navigate("/customize")}>Customize your Assistant</button>
+      <button className='hidden lg:block absolute top-[20px] right-[20px] min-w-[150px] h-[50px] text-black font-semibold bg-white rounded-full text-[16px]' onClick={handleLogOut}>Log Out</button>
+      <button className='hidden lg:block absolute top-[80px] right-[20px] min-w-[150px] h-[50px] text-black font-semibold bg-white rounded-full text-[16px]' onClick={() => navigate("/customize")}>Customize Assistant</button>
 
       {/* Main Content */}
       <div className='flex flex-col items-center w-full max-w-4xl px-4'>
         {/* Assistant Avatar */}
-        <div className='w-[300px] h-[300px] flex justify-center items-center overflow-hidden rounded-4xl shadow-lg mb-4'>
+        <div className='w-[200px] h-[200px] sm:w-[300px] sm:h-[300px] flex justify-center items-center overflow-hidden rounded-4xl shadow-lg mb-4'>
           <img src={userData?.assistantImage} alt="" className='h-full object-cover' />
         </div>
         <h1 className='text-white text-[18px] font-semibold mb-4'>I'm {userData?.assistantName}</h1>
 
-        {/* Chat Box (Updated) */}
+        {/* Chat Box */}
         <div
           ref={chatContainerRef}
-          className='w-full h-[400px] bg-[#ffffff1a] rounded-2xl p-4 overflow-y-auto mb-4 space-y-3 scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent'
+          className='w-full h-[400px] bg-[#ffffff1a] rounded-2xl p-4 overflow-y-auto mb-4 flex flex-col gap-4 scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent'
         >
           {conversation.map((msg, index) => (
             <div
               key={index}
-              className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex items-start gap-2 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
             >
+              {msg.type === 'ai' && (
+                <img
+                  src={userData?.assistantImage}
+                  alt="AI"
+                  className="w-8 h-8 rounded-full object-cover mt-1"
+                />
+              )}
               <div
-                className={`max-w-[80%] px-4 py-2 text-[15px] rounded-2xl break-words ${
+                className={`px-4 py-2 text-sm sm:text-[15px] rounded-2xl max-w-[75%] sm:max-w-[65%] break-words ${
                   msg.type === 'user'
                     ? 'bg-blue-600 text-white rounded-br-none'
                     : 'bg-white text-black rounded-bl-none'
@@ -212,15 +220,22 @@ function Home() {
               >
                 {msg.text}
               </div>
+              {msg.type === 'user' && (
+                <img
+                  src={userImg}
+                  alt="User"
+                  className="w-8 h-8 rounded-full object-cover mt-1"
+                />
+              )}
             </div>
           ))}
         </div>
 
-        {/* Current Message Display */}
-        <div className='flex items-center gap-4'>
-          {!aiText && <img src={userImg} alt="" className='w-[100px]' />}
-          {aiText && <img src={aiImg} alt="" className='w-[100px]' />}
-          <h1 className='text-white text-[18px] font-semibold text-wrap'>{userText || aiText || null}</h1>
+        {/* Current Message */}
+        <div className='flex items-center gap-4 flex-wrap text-center justify-center'>
+          {!aiText && <img src={userImg} alt="" className='w-[80px]' />}
+          {aiText && <img src={aiImg} alt="" className='w-[80px]' />}
+          <h1 className='text-white text-[16px] font-medium max-w-full break-words'>{userText || aiText || null}</h1>
         </div>
       </div>
     </div>
