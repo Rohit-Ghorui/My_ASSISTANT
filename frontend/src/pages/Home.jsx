@@ -142,9 +142,7 @@ function Home() {
 
   const handleTextSubmit = async () => {
     if (!typedInput.trim()) return;
-
     const input = typedInput.trim();
-    setConversation(prev => [...prev, { type: 'user', text: input }]);
     setTypedInput('');
     const data = await getGeminiResponse(input);
     handleCommand(data);
