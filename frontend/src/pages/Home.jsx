@@ -8,12 +8,11 @@ import userImg from '../assets/user.gif';
 function Home() {
   const { userData, serverUrl, setUserData, getGeminiResponse } = useContext(userDataContext);
   const navigate = useNavigate();
-
   const [userText, setUserText] = useState('');
   const [aiText, setAiText] = useState('');
   const [conversation, setConversation] = useState([]);
   const [assistantStarted, setAssistantStarted] = useState(false);
-  const [micError, setMicError] = useState(false); // 👈 Mic error state
+  const [micError, setMicError] = useState(false);
 
   const recognitionRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -51,14 +50,11 @@ function Home() {
   };
 
   const startRecognition = () => {
-    if (!isSpeakingRef.current && !isRecognizingRef.current) {
+    if (!isSpeakingRef.current && !isRecognizingRef.current && recognitionRef.current) {
       try {
-        recognitionRef.current?.start();
+        recognitionRef.current.start();
       } catch (e) {
-        if (e.name !== 'InvalidStateError') {
-          console.error(e);
-          setMicError(true);
-        }
+        if (e.name !== 'InvalidStateError') console.error(e);
       }
     }
   };
@@ -66,12 +62,15 @@ function Home() {
   const retryMicAccess = () => {
     setMicError(false);
     try {
-      recognitionRef.current?.start();
-    } catch (e) {
-      if (e.name !== 'InvalidStateError') {
-        console.error("Retry mic error:", e);
-        setMicError(true);
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+        setTimeout(() => {
+          recognitionRef.current.start();
+        }, 300);
       }
+    } catch (e) {
+      console.error("Mic retry failed:", e);
+      setMicError(true);
     }
   };
 
@@ -106,18 +105,21 @@ function Home() {
 
     recognition.onend = () => {
       isRecognizingRef.current = false;
-      if (!isSpeakingRef.current) {
+      if (!isSpeakingRef.current && !micError) {
         setTimeout(() => startRecognition(), 1000);
       }
     };
 
     recognition.onerror = (event) => {
       isRecognizingRef.current = false;
-      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      console.error("Recognition error:", event.error);
+
+      if (["not-allowed", "service-not-allowed", "audio-capture"].includes(event.error)) {
         setMicError(true);
         return;
       }
-      if (!isSpeakingRef.current) {
+
+      if (!isSpeakingRef.current && !micError) {
         setTimeout(() => startRecognition(), 1000);
       }
     };
@@ -175,18 +177,6 @@ function Home() {
           <img src={userData?.assistantImage} className="w-40 h-40 sm:w-52 sm:h-52 rounded-full object-cover mb-4" alt="assistant" />
           <h1 className="text-white text-lg sm:text-xl mb-4">I'm {userData?.assistantName}</h1>
 
-          {micError && (
-            <div className="text-red-500 font-medium text-center mb-4">
-              Microphone access is denied or not working.
-              <button
-                onClick={retryMicAccess}
-                className="ml-4 px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 text-sm"
-              >
-                Retry Microphone
-              </button>
-            </div>
-          )}
-
           <div
             ref={chatContainerRef}
             className="w-full h-[400px] bg-white bg-opacity-10 rounded-xl p-4 overflow-y-auto mb-6 flex flex-col gap-3 scrollbar-thin scrollbar-thumb-gray-500"
@@ -206,6 +196,15 @@ function Home() {
           <div className="flex flex-col items-center justify-center gap-3 text-white text-base sm:text-lg text-center">
             <img src={aiText ? aiImg : userImg} className="w-16" alt="" />
             <p className="max-w-full break-words">{userText || aiText || null}</p>
+
+            {micError && (
+              <button
+                onClick={retryMicAccess}
+                className="mt-4 px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-semibold"
+              >
+                Retry Microphone Access
+              </button>
+            )}
           </div>
         </div>
       )}
