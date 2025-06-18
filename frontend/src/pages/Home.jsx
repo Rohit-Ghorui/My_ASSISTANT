@@ -69,7 +69,7 @@ function Home() {
       recognition.onerror = (e) => {
         console.error("Mic Error:", e.error);
         isRecognizingRef.current = false;
-        if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'no-speech') {
+        if (['not-allowed', 'service-not-allowed', 'no-speech'].includes(e.error)) {
           setMicError(true);
         }
         if (!isSpeakingRef.current) setTimeout(() => startRecognition(), 1000);
@@ -170,7 +170,7 @@ function Home() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-t from-black to-[#02023d] flex flex-col items-center py-6 px-4 sm:px-8">
+    <div className="w-full min-h-screen pb-36 bg-gradient-to-t from-black to-[#02023d] flex flex-col items-center py-6 px-4 sm:px-8">
       <div className="w-full max-w-6xl flex justify-between items-center mb-4">
         <div />
         <div className="flex flex-wrap gap-3 justify-center">
@@ -194,7 +194,7 @@ function Home() {
 
           <div
             ref={chatContainerRef}
-            className="w-full h-[400px] bg-white bg-opacity-10 rounded-xl p-4 overflow-y-auto mb-6 flex flex-col gap-3 scrollbar-thin scrollbar-thumb-gray-500"
+            className="w-full h-[400px] bg-white bg-opacity-10 rounded-xl p-4 overflow-y-auto mb-4 flex flex-col gap-3 scrollbar-thin scrollbar-thumb-gray-500"
           >
             {conversation.map((msg, i) => (
               <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'} items-start gap-2`}>
@@ -208,32 +208,41 @@ function Home() {
             ))}
           </div>
 
-          <div className="flex flex-col items-center justify-center gap-3 text-white text-base sm:text-lg text-center">
+          <div className="flex flex-col items-center justify-center gap-3 text-white text-base sm:text-lg text-center mt-4 mb-2">
             <img src={aiText ? aiImg : userImg} className="w-16" alt="" />
             <p className="max-w-full break-words">{userText || aiText || null}</p>
           </div>
+        </div>
+      )}
 
+      {/* Input + Retry Section Fixed Bottom */}
+      {assistantStarted && (
+        <div className="w-full max-w-3xl fixed bottom-5 px-4 sm:px-0">
           {micError && (
-            <div className="w-full mt-4 text-white flex flex-col items-center gap-3">
-              <p className="text-yellow-400 text-sm">🎤 Microphone access failed. Type instead:</p>
-              <div className="w-full flex flex-col sm:flex-row items-center gap-2">
-                <input
-                  type="text"
-                  className="w-full sm:w-[70%] px-4 py-2 rounded-md text-black bg-white placeholder-gray-600"
-                  placeholder="Type your command..."
-                  value={typedInput}
-                  onChange={(e) => setTypedInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleTextSubmit()}
-                />
-                <button
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
-                  onClick={handleTextSubmit}
-                >
-                  Send
-                </button>
-              </div>
+            <p className="text-yellow-400 text-sm mb-2 text-center">
+              🎤 Microphone access failed. Type instead:
+            </p>
+          )}
+          <div className="flex flex-col sm:flex-row items-center gap-2">
+            <input
+              type="text"
+              className="w-full sm:w-[70%] px-4 py-2 rounded-md text-black bg-white placeholder-gray-600"
+              placeholder="Type your command..."
+              value={typedInput}
+              onChange={(e) => setTypedInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleTextSubmit()}
+            />
+            <button
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md w-full sm:w-auto"
+              onClick={handleTextSubmit}
+            >
+              Send
+            </button>
+          </div>
+          {micError && (
+            <div className="flex justify-center mt-3">
               <button
-                className="mt-3 px-4 py-2 bg-yellow-400 text-black rounded-full"
+                className="px-4 py-2 bg-yellow-400 text-black rounded-full"
                 onClick={retryMicAccess}
               >
                 🎙️ Retry Microphone
