@@ -13,6 +13,7 @@ function Home() {
   const [conversation, setConversation] = useState([]);
   const [assistantStarted, setAssistantStarted] = useState(false);
   const [micError, setMicError] = useState(false);
+  const [typedInput, setTypedInput] = useState('');
 
   const recognitionRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -49,12 +50,59 @@ function Home() {
     synth.speak(utterance);
   };
 
+  const initRecognition = () => {
+    try {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        isRecognizingRef.current = true;
+        setMicError(false);
+      };
+      recognition.onend = () => {
+        isRecognizingRef.current = false;
+        if (!isSpeakingRef.current) setTimeout(() => startRecognition(), 1000);
+      };
+      recognition.onerror = (e) => {
+        console.error("Mic Error:", e.error);
+        isRecognizingRef.current = false;
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'no-speech') {
+          setMicError(true);
+        }
+        if (!isSpeakingRef.current) setTimeout(() => startRecognition(), 1000);
+      };
+
+      recognition.onresult = async (e) => {
+        const transcript = e.results[e.results.length - 1][0].transcript.trim();
+        if (transcript.toLowerCase().includes(userData.assistantName.toLowerCase())) {
+          setUserText(transcript);
+          recognition.stop();
+          const data = await getGeminiResponse(transcript);
+          handleCommand(data);
+          setAiText(data.response);
+          setUserText('');
+        }
+      };
+
+      recognitionRef.current = recognition;
+    } catch (e) {
+      console.error("Recognition init failed:", e);
+      setMicError(true);
+    }
+  };
+
   const startRecognition = () => {
-    if (!isSpeakingRef.current && !isRecognizingRef.current && recognitionRef.current) {
+    if (!isSpeakingRef.current && !isRecognizingRef.current) {
       try {
-        recognitionRef.current.start();
+        recognitionRef.current?.start();
       } catch (e) {
-        if (e.name !== 'InvalidStateError') console.error(e);
+        if (e.name !== 'InvalidStateError') {
+          console.error(e);
+          setMicError(true);
+        }
       }
     }
   };
@@ -62,12 +110,11 @@ function Home() {
   const retryMicAccess = () => {
     setMicError(false);
     try {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-        setTimeout(() => {
-          recognitionRef.current.start();
-        }, 300);
-      }
+      recognitionRef.current?.abort();
+      initRecognition();
+      setTimeout(() => {
+        recognitionRef.current?.start();
+      }, 500);
     } catch (e) {
       console.error("Mic retry failed:", e);
       setMicError(true);
@@ -93,50 +140,20 @@ function Home() {
     }
   };
 
+  const handleTextSubmit = async () => {
+    if (!typedInput.trim()) return;
+
+    const input = typedInput.trim();
+    setConversation(prev => [...prev, { type: 'user', text: input }]);
+    setTypedInput('');
+    const data = await getGeminiResponse(input);
+    handleCommand(data);
+    setAiText(data.response);
+  };
+
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognitionRef.current = recognition;
-
-    recognition.onstart = () => isRecognizingRef.current = true;
-
-    recognition.onend = () => {
-      isRecognizingRef.current = false;
-      if (!isSpeakingRef.current && !micError) {
-        setTimeout(() => startRecognition(), 1000);
-      }
-    };
-
-    recognition.onerror = (event) => {
-      isRecognizingRef.current = false;
-      console.error("Recognition error:", event.error);
-
-      if (["not-allowed", "service-not-allowed", "audio-capture"].includes(event.error)) {
-        setMicError(true);
-        return;
-      }
-
-      if (!isSpeakingRef.current && !micError) {
-        setTimeout(() => startRecognition(), 1000);
-      }
-    };
-
-    recognition.onresult = async (e) => {
-      const transcript = e.results[e.results.length - 1][0].transcript.trim();
-      if (transcript.toLowerCase().includes(userData.assistantName.toLowerCase())) {
-        setUserText(transcript);
-        recognition.stop();
-        const data = await getGeminiResponse(transcript);
-        handleCommand(data);
-        setAiText(data.response);
-        setUserText('');
-      }
-    };
-
-    return () => recognition.stop();
+    initRecognition();
+    return () => recognitionRef.current?.stop();
   }, []);
 
   useEffect(() => {
@@ -196,16 +213,35 @@ function Home() {
           <div className="flex flex-col items-center justify-center gap-3 text-white text-base sm:text-lg text-center">
             <img src={aiText ? aiImg : userImg} className="w-16" alt="" />
             <p className="max-w-full break-words">{userText || aiText || null}</p>
-
-            {micError && (
-              <button
-                onClick={retryMicAccess}
-                className="mt-4 px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-semibold"
-              >
-                Retry Microphone Access
-              </button>
-            )}
           </div>
+
+          {micError && (
+            <div className="w-full mt-4 text-white flex flex-col items-center gap-3">
+              <p className="text-yellow-400 text-sm">🎤 Microphone access failed. Type instead:</p>
+              <div className="w-full flex flex-col sm:flex-row items-center gap-2">
+                <input
+                  type="text"
+                  className="w-full sm:w-[70%] px-4 py-2 rounded-md text-black"
+                  placeholder="Type your command..."
+                  value={typedInput}
+                  onChange={(e) => setTypedInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleTextSubmit()}
+                />
+                <button
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+                  onClick={handleTextSubmit}
+                >
+                  Send
+                </button>
+              </div>
+              <button
+                className="mt-3 px-4 py-2 bg-yellow-400 text-black rounded-full"
+                onClick={retryMicAccess}
+              >
+                🎙️ Retry Microphone
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
