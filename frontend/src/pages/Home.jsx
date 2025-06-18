@@ -8,10 +8,13 @@ import userImg from '../assets/user.gif';
 function Home() {
   const { userData, serverUrl, setUserData, getGeminiResponse } = useContext(userDataContext);
   const navigate = useNavigate();
+
   const [userText, setUserText] = useState('');
   const [aiText, setAiText] = useState('');
   const [conversation, setConversation] = useState([]);
   const [assistantStarted, setAssistantStarted] = useState(false);
+  const [micError, setMicError] = useState(false); // 👈 Mic error state
+
   const recognitionRef = useRef(null);
   const chatContainerRef = useRef(null);
   const isSpeakingRef = useRef(false);
@@ -52,7 +55,22 @@ function Home() {
       try {
         recognitionRef.current?.start();
       } catch (e) {
-        if (e.name !== 'InvalidStateError') console.error(e);
+        if (e.name !== 'InvalidStateError') {
+          console.error(e);
+          setMicError(true);
+        }
+      }
+    }
+  };
+
+  const retryMicAccess = () => {
+    setMicError(false);
+    try {
+      recognitionRef.current?.start();
+    } catch (e) {
+      if (e.name !== 'InvalidStateError') {
+        console.error("Retry mic error:", e);
+        setMicError(true);
       }
     }
   };
@@ -85,13 +103,23 @@ function Home() {
     recognitionRef.current = recognition;
 
     recognition.onstart = () => isRecognizingRef.current = true;
+
     recognition.onend = () => {
       isRecognizingRef.current = false;
-      if (!isSpeakingRef.current) setTimeout(() => startRecognition(), 1000);
+      if (!isSpeakingRef.current) {
+        setTimeout(() => startRecognition(), 1000);
+      }
     };
-    recognition.onerror = () => {
+
+    recognition.onerror = (event) => {
       isRecognizingRef.current = false;
-      if (!isSpeakingRef.current) setTimeout(() => startRecognition(), 1000);
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        setMicError(true);
+        return;
+      }
+      if (!isSpeakingRef.current) {
+        setTimeout(() => startRecognition(), 1000);
+      }
     };
 
     recognition.onresult = async (e) => {
@@ -146,6 +174,18 @@ function Home() {
         <div className="w-full max-w-3xl flex flex-col items-center">
           <img src={userData?.assistantImage} className="w-40 h-40 sm:w-52 sm:h-52 rounded-full object-cover mb-4" alt="assistant" />
           <h1 className="text-white text-lg sm:text-xl mb-4">I'm {userData?.assistantName}</h1>
+
+          {micError && (
+            <div className="text-red-500 font-medium text-center mb-4">
+              Microphone access is denied or not working.
+              <button
+                onClick={retryMicAccess}
+                className="ml-4 px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 text-sm"
+              >
+                Retry Microphone
+              </button>
+            </div>
+          )}
 
           <div
             ref={chatContainerRef}
